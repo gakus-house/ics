@@ -1,0 +1,37 @@
+name: Generate ICS
+
+on:
+  push:
+    paths:
+      - 'events.xlsx'
+      - 'generate.py'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install packages
+        run: pip install pandas openpyxl
+
+      - name: Generate ICS
+        run: python generate.py
+
+      - name: Commit ICS
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add calendar.ics
+          git commit -m "Auto update calendar" || echo "No changes"
+          git push
