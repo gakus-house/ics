@@ -2,37 +2,42 @@ import pandas as pd
 from datetime import datetime
 from uuid import uuid4
 
-df = pd.read_excel("events.xlsx")
+# Excelファイル内の全シート取得
+excel_file = pd.ExcelFile("events.xlsx")
 
-calendar = []
-calendar.append("BEGIN:VCALENDAR")
-calendar.append("VERSION:2.0")
-calendar.append("PRODID:-//School Calendar//JP")
+for sheet_name in excel_file.sheet_names:
 
-for _, row in df.iterrows():
-    uid = str(uuid4())
+    # シート読み込み
+    df = pd.read_excel("events.xlsx", sheet_name=sheet_name)
 
-    start = pd.to_datetime(row["start"])
-    end = pd.to_datetime(row["end"])
+    lines = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        f"PRODID:-//{sheet_name} Calendar//JP"
+    ]
 
-    start_str = start.strftime("%Y%m%dT%H%M%S")
-    end_str = end.strftime("%Y%m%dT%H%M%S")
-    now_str = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+    for _, row in df.iterrows():
 
-    calendar.extend([
-        "BEGIN:VEVENT",
-        f"UID:{uid}",
-        f"DTSTAMP:{now_str}",
-        f"DTSTART;TZID=Asia/Tokyo:{start_str}",
-        f"DTEND;TZID=Asia/Tokyo:{end_str}",
-        f"SUMMARY:{row['title']}",
-        f"DESCRIPTION:{row['description']}",
-        "END:VEVENT"
-    ])
+        start = pd.to_datetime(row["start"])
+        end = pd.to_datetime(row["end"])
 
-calendar.append("END:VCALENDAR")
+        lines.extend([
+            "BEGIN:VEVENT",
+            f"UID:{uuid4()}",
+            f"DTSTAMP:{datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}",
+            f"DTSTART:{start.strftime('%Y%m%dT%H%M%S')}",
+            f"DTEND:{end.strftime('%Y%m%dT%H%M%S')}",
+            f"SUMMARY:{row['title']}",
+            f"DESCRIPTION:{row['description']}",
+            "END:VEVENT"
+        ])
 
-with open("calendar.ics", "w", encoding="utf-8") as f:
-    f.write("\n".join(calendar))
+    lines.append("END:VCALENDAR")
 
-print("calendar.ics generated!")
+    # シート名でics生成
+    filename = f"{sheet_name}.ics"
+
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines))
+
+    print(f"{filename} generated!")
