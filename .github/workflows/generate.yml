@@ -24,6 +24,9 @@ jobs:
       - run: |
           git config user.name github-actions
           git config user.email actions@github.com
-          git add calendar.ics
-          git commit -m "update calendar" || echo "no changes"
+
+          git add *.ics
+
+          git commit -m "update calendars" || echo "No changes"
+
           git push
